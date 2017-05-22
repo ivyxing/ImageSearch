@@ -57,7 +57,7 @@ extension UIImageView
                             // update the image
                             self?.image = loadedImage
                     }
-            }
+                }
         }
     }
 }
