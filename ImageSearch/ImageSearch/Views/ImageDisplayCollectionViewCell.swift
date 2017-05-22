@@ -24,9 +24,6 @@ class ImageDisplayCollectionViewCell: UICollectionViewCell
      
         // set image view's image
         self.displayImageView?.loadImage(fromUrl: url, withPlaceholder: nil)
-        
-        // debugging:
-        NSLog("HELLO \(self.displayImageView?.image != nil)")
     }
 }
 

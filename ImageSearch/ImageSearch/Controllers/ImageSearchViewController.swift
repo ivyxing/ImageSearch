@@ -10,18 +10,22 @@ import UIKit
 
 class ImageSearchViewController: UIViewController
 {
+    @IBOutlet weak var imageSearchBar: UISearchBar?
     @IBOutlet weak var collectionView: UICollectionView?
     
     // data
     var imageResults = Array<ImageResult>()
+    var isLoadingData = false
     // paging
-    var hasMorePages = true
-    var page: Int = 1
+    var hasMoreResults = true
+    var perPage: Int = 20 // count per page
+    var pageOffset: Int = 0   // current count position, incremented by perPage in every request
     
     override func viewDidLoad()
     {
         super.viewDidLoad()
      
+        self.localizeStrings()
         self.registerCells()
     }
 }
@@ -31,24 +35,37 @@ extension ImageSearchViewController
 {
     fileprivate func searchImages(query: String, shouldReset: Bool = false)
     {
-        // fetch from beginning
-        if shouldReset
-        { self.resetPaging() }
+        // one request at a time
+        guard self.isLoadingData == false else
+        { return }
         
         // make sure query is valid
         guard query.characters.count > 0 else
         { return }
         
+        if shouldReset
+        { self.resetPaging() }
+        
+        self.isLoadingData = true
+        
         // make api call
         let model = ImageSearchModel()
         model.getImageResults(
             searchQuery: query,
+            perPage: self.perPage,
+            offset: self.pageOffset,
             successBlock:
             {[weak self] (imageResults, isEndOfList) in
-                self?.imageResults += imageResults
-                self?.hasMorePages = !isEndOfList
-                self?.page += 1
-                self?.collectionView?.reloadData()
+                guard let weakself = self else
+                { return }
+                
+                // append data and update paging
+                weakself.imageResults += imageResults
+                weakself.hasMoreResults = !isEndOfList
+                weakself.pageOffset += weakself.perPage
+                
+                weakself.isLoadingData = false
+                weakself.collectionView?.reloadData()
             },
             failureBlock:
             {(error) in
@@ -57,7 +74,6 @@ extension ImageSearchViewController
             }
         )
     }
-    
 }
 
 //MARK: - UICollectionViewDataSource -
@@ -86,6 +102,25 @@ extension ImageSearchViewController: UICollectionViewDataSource
     }
 }
 
+//MARK: - UICollectionViewDelegate -
+extension ImageSearchViewController: UICollectionViewDelegate
+{
+    func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath)
+    {
+        let isLastRow = (indexPath.row == self.imageResults.count - 1)
+        
+        // at bottom of page, see if we need to fetch more images
+        if let text = self.imageSearchBar?.text,
+            text.characters.count > 0,
+            isLastRow,
+            self.hasMoreResults,
+            !self.isLoadingData
+        {
+            self.searchImages(query: text)
+        }
+    }
+}
+
 //MARK: - UICollectionViewDelegateFlowLayout -
 extension ImageSearchViewController: UICollectionViewDelegateFlowLayout
 {
@@ -101,6 +136,12 @@ extension ImageSearchViewController: UICollectionViewDelegateFlowLayout
 //MARK: - Helper Functions: Initialization -
 extension ImageSearchViewController
 {
+    // Localize strings
+    fileprivate func localizeStrings()
+    {
+        self.imageSearchBar?.placeholder = NSLocalizedString("Search image", comment: "Search image")
+    }
+    
     // Registers cells for collection view
     fileprivate func registerCells()
     {
@@ -114,21 +155,25 @@ extension ImageSearchViewController
 //MARK: - Helper Functions: Utilities -
 extension ImageSearchViewController
 {
+    // Resets the paging
     fileprivate func resetPaging()
     {
-        self.imageResults.removeAll()
-        self.hasMorePages = true
-        self.page = 1
+        self.imageResults = Array<ImageResult>()
+        self.hasMoreResults = true
+        self.pageOffset = 0
     }
 }
 
 //MARK: - UISearchBarDelegate -
 extension ImageSearchViewController: UISearchBarDelegate
 {
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String)
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar)
     {
-        self.searchImages(query: searchText, shouldReset: true)
-        self.collectionView?.reloadData()
+        guard let text = self.imageSearchBar?.text,
+            text.characters.count > 0 else
+        { return }
+        
+        self.searchImages(query: text)
     }
 }
 

@@ -19,6 +19,7 @@ fileprivate struct ImageResultsNetworkRequestParameter
 {
     static let searchQuery = "q"
     static let perPage = "count"
+    static let offset = "offset"
 }
 
 
@@ -31,12 +32,14 @@ class ImageResultsNetworkRequest: NetworkRequest
     
     class func imageSearchRequest(searchQuery: String,
                                   perPage: Int,
+                                  offset: Int,
                                   successBlock: ((_ jsonObject: Any?, _ response: URLResponse?)-> Void)? = nil,
                                   failureBlock: ((_ error: NSError) -> Void)? = nil)
     {
         // parameters
         self.params[ImageResultsNetworkRequestParameter.searchQuery] = searchQuery as AnyObject
         self.params[ImageResultsNetworkRequestParameter.perPage] = perPage as AnyObject
+        self.params[ImageResultsNetworkRequestParameter.offset] = offset as AnyObject
         
         // url
         guard let url = URL(string: self.getFullPath()) else

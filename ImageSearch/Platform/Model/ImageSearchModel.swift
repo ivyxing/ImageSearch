@@ -17,12 +17,14 @@ class ImageSearchModel: NSObject
     
     public func getImageResults(searchQuery: String,
                                 perPage: Int = ImageSearchModel.defaultPageSize,
+                                offset: Int = 0,
                                 successBlock: ((_ imageResults: Array<ImageResult>, _ isEndOfList: Bool)-> Void)? = nil,
                                 failureBlock: ((_ error: NSError) -> Void)? = nil)
     {
         ImageResultsNetworkRequest.imageSearchRequest(
             searchQuery: searchQuery,
             perPage: perPage,
+            offset: offset,
             successBlock:
             { (data, response) in
                 guard let foundData = data as? NSDictionary,
@@ -45,9 +47,8 @@ class ImageSearchModel: NSObject
                         if let foundError = error
                         { failureBlock?(foundError) }
                         else
-                        { successBlock?(parsedList, true) }
+                        { successBlock?(parsedList, false) }
                     }
-                
             },
             failureBlock:
             { (error) in
