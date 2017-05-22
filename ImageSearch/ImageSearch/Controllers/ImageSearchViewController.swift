@@ -27,6 +27,12 @@ class ImageSearchViewController: UIViewController
      
         self.localizeStrings()
         self.registerCells()
+        self.addObservers()
+    }
+    
+    deinit
+    {
+        self.removeObservers()
     }
 }
 
@@ -149,6 +155,66 @@ extension ImageSearchViewController
         { return }
         
         ImageDisplayCollectionViewCell.regiserCell(forCollectionView: collectionView)
+    }
+}
+
+//MARK: - Observers -
+extension ImageSearchViewController
+{
+    
+    fileprivate func addObservers()
+    {
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(keyboardWillShowNotify(_:)),
+                                               name: NSNotification.Name.UIKeyboardWillShow,
+                                               object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(keyboardWillHideNotify(_:)),
+                                               name: NSNotification.Name.UIKeyboardWillHide,
+                                               object: nil)
+    }
+    
+    fileprivate func removeObservers()
+    {
+        NotificationCenter.default.removeObserver(self,
+                                                  name: NSNotification.Name.UIKeyboardWillShow,
+                                                  object: nil)
+        NotificationCenter.default.removeObserver(self,
+                                                  name: NSNotification.Name.UIKeyboardWillHide,
+                                                  object: nil)
+    }
+
+}
+
+//MARK: - Helper Functions: Keyboard -
+extension ImageSearchViewController
+{
+    // Adjusts collection view up when keyboard shows
+    func keyboardWillShowNotify(_ notification: Notification)
+    {
+        guard let collectionView = self.collectionView,
+            let userInfo = (notification as NSNotification).userInfo else
+        { return }
+        
+        if let keyboardFrame = (userInfo[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.cgRectValue
+        { self._adjustCollectionViewInsets(collectionView: collectionView, toHeight: keyboardFrame.size.height) }
+    }
+    
+    // Adjusts collection view down when keyboard hides
+    func keyboardWillHideNotify(_ notification: Notification)
+    {
+        guard let collectionView = self.collectionView else
+        { return }
+        
+        self._adjustCollectionViewInsets(collectionView: collectionView, toHeight: 0.0)
+    }
+    
+    // Helper function to adjust view
+    fileprivate func _adjustCollectionViewInsets(collectionView: UICollectionView, toHeight height: CGFloat)
+    {
+        var insets = collectionView.contentInset
+        insets.bottom = height
+        collectionView.contentInset = insets
     }
 }
 
