@@ -25,7 +25,7 @@ class ImageResult: NSObject
     {
         super.init()
         
-        if let ID = dict[ImageResultAPIKey.ID ] as? String
+        if let ID = dict[ImageResultAPIKey.ID] as? String
         { self.ID = ID }
         
         if let name = dict[ImageResultAPIKey.name] as? String

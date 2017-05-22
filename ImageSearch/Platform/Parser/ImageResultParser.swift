@@ -27,6 +27,7 @@ class ImageResultParser: NSObject
     {
         var imageResultsList = Array<ImageResult>()
         
+        // return empty list if cannot parse
         guard let list = data as? Array<NSDictionary> else
         {
             error?.pointee = NSError.standardParseError
@@ -35,6 +36,7 @@ class ImageResultParser: NSObject
         
         for dict in list
         {
+            // add if can be initialized
             if let imageResult = ImageResult(dict: dict)
             { imageResultsList.append(imageResult) }
         }
