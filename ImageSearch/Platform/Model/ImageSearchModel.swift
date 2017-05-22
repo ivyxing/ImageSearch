@@ -13,6 +13,8 @@ class ImageSearchModel: NSObject
     class var defaultPageSize: Int
     { return 20 }
     
+    let dataKey = "value"
+    
     public func getImageResults(searchQuery: String,
                                 perPage: Int = ImageSearchModel.defaultPageSize,
                                 successBlock: ((_ imageResults: Array<ImageResult>, _ isEndOfList: Bool)-> Void)? = nil,
@@ -24,7 +26,7 @@ class ImageSearchModel: NSObject
             successBlock:
             { (data, response) in
                 guard let foundData = data as? NSDictionary,
-                    let values = foundData["value"] else
+                    let values = foundData[self.dataKey] else
                 {
                     DispatchQueue.main.async
                         { successBlock?([], true) }
